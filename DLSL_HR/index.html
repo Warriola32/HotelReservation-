@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DLSL Guest House Reservation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <div class="brand-group">
+  <div class="brand-mark">
+        <a href="index.html">
+        <img src="dlsl_logo.png" alt="De La Salle Lipa Logo" class="logo-img">
+        </a>
+  </div>
+  <div class="brand-text">
+    <p class="eyebrow">De La Salle Lipa</p>
+    <h1 class="brand-title">Guest House Reservation Portal</h1>
+  </div>
+</div>
+
+<nav>
+  <a href="#rooms">Rooms</a>
+  <a href="#reserve">Reserve</a>
+  <a href="admin.html">Admin</a>
+</nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow">Teaching Minds. Touching Hearts. Transforming Lives.</p>
+          <h2>Professional hotel-style booking for campus hospitality.</h2>
+          <p class="hero-copy">
+            A DLSL-aligned reservation experience for guests, visiting faculty, partners, and event participants.
+            Submit your request online and track a structured approval workflow managed through Google Sheets and Apps Script.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#reserve">Book a Stay</a>
+            <a class="btn btn-secondary" href="admin.html">Open Admin Panel</a>
+          </div>
+          <div class="hero-badges">
+            <span>Google Sheets Database</span>
+            <span>Apps Script Automation</span>
+            <span>Pending Approval Workflow</span>
+          </div>
+        </div>
+        <aside class="hero-card card">
+          <h3>Reservation Workflow</h3>
+          <ol class="steps">
+            <li>Guest submits reservation request</li>
+            <li>Request is saved to Google Sheets</li>
+            <li>Admin reviews and approves or declines</li>
+            <li>Status is updated in the dashboard</li>
+          </ol>
+          <div class="summary-strip">
+            <div>
+              <strong>Brand style</strong>
+              <span>Lasallian green, formal, clean</span>
+            </div>
+            <div>
+              <strong>Use case</strong>
+              <span>Institutional hospitality</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="rooms" class="section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Accommodation Options</p>
+          <h2>Curated room categories</h2>
+        </div>
+        <div class="room-grid">
+          <article class="card room-card">
+            <div class="room-top deluxe"></div>
+            <div class="room-body">
+              <h3>Standard Room</h3>
+              <p>Comfortable, efficient, and ideal for short institutional stays.</p>
+              <ul>
+                <li>1 queen bed</li>
+                <li>Air-conditioned</li>
+                <li>Wi-Fi and work desk</li>
+              </ul>
+            </div>
+          </article>
+          <article class="card room-card">
+            <div class="room-top executive"></div>
+            <div class="room-body">
+              <h3>Executive Room</h3>
+              <p>Refined space for visiting speakers, partners, and administrators.</p>
+              <ul>
+                <li>1 king bed</li>
+                <li>Lounge area</li>
+                <li>Premium amenities</li>
+              </ul>
+            </div>
+          </article>
+          <article class="card room-card">
+            <div class="room-top suite"></div>
+            <div class="room-body">
+              <h3>Family Suite</h3>
+              <p>Flexible space for group stays and special campus events.</p>
+              <ul>
+                <li>Multiple beds</li>
+                <li>Expanded floor area</li>
+                <li>Best for extended stays</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="reserve" class="section section-accent">
+      <div class="container booking-layout">
+        <div>
+          <div class="section-heading left">
+            <p class="eyebrow">Reservation Form</p>
+            <h2>Submit a booking request</h2>
+            <p>All reservations are subject to admin approval before confirmation.</p>
+          </div>
+
+          <form id="reservationForm" class="card booking-form">
+            <div class="form-grid">
+              <label>
+                Full Name
+                <input type="text" name="fullName" required>
+              </label>
+              <label>
+                Email Address
+                <input type="email" name="email" required>
+              </label>
+              <label>
+                Contact Number
+                <input type="text" name="phone" required>
+              </label>
+              <label>
+                Affiliation
+                <select name="affiliation" required>
+                  <option value="">Select</option>
+                  <option>Student Guest</option>
+                  <option>Parent</option>
+                  <option>Faculty / Staff</option>
+                  <option>Visiting Partner</option>
+                  <option>Event Delegate</option>
+                </select>
+              </label>
+              <label>
+                Check-in Date
+                <input type="date" name="checkIn" required>
+              </label>
+              <label>
+                Check-out Date
+                <input type="date" name="checkOut" required>
+              </label>
+              <label>
+                Room Type
+                <select name="roomType" required>
+                  <option value="">Select</option>
+                  <option>Standard Room</option>
+                  <option>Executive Room</option>
+                  <option>Family Suite</option>
+                </select>
+              </label>
+              <label>
+                Number of Guests
+                <input type="number" name="guests" min="1" max="8" required>
+              </label>
+            </div>
+
+            <label>
+              Special Requests
+              <textarea name="specialRequests" rows="4" placeholder="Arrival notes, event purpose, accessibility requests, or other details"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Submit for Approval</button>
+              <p id="formMessage" class="form-message"></p>
+            </div>
+          </form>
+        </div>
+
+        <aside class="card booking-summary">
+          <h3>Booking Notes</h3>
+          <ul class="info-list">
+            <li>Reservations are logged in a Google Sheet.</li>
+            <li>New requests default to <strong>Pending</strong>.</li>
+            <li>Only approved requests are considered confirmed.</li>
+            <li>Admin can update status and add remarks.</li>
+          </ul>
+          <div class="status-box pending">
+            <strong>Default Status</strong>
+            <span>Pending Approval</span>
+          </div>
+          <div class="status-box neutral">
+            <strong>Recommended Admin Columns</strong>
+            <span>ID, guest details, stay dates, room, status, remarks, reviewed by</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <div>
+        <strong>De La Salle Lipa Guest House Reservation Portal</strong>
+        <p>Professional institutional booking interface powered by Google Sheets and Apps Script.</p>
+      </div>
+      <div class="footer-links">
+        <a href="admin.html">Admin Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

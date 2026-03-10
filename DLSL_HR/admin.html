@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DLSL Reservation Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <header class="site-header compact">
+  <div class="container nav-wrap">
+
+    <div class="brand-group">
+      <div class="brand-mark">
+        <a href="index.html">
+        <img src="dlsl_logo.png" alt="De La Salle Lipa Logo" class="logo-img">
+        </a>     
+      </div>
+
+      <div class="brand-text">
+        <p class="eyebrow">De La Salle Lipa</p>
+        <h1 class="brand-title">Reservation Admin Dashboard</h1>
+      </div>
+    </div>
+
+    <nav>
+      <a href="index.html">Booking Site</a>
+    </nav>
+
+  </div>
+</header>
+
+  <main class="section">
+    <div class="container">
+      <div class="dashboard-top">
+        <div>
+          <p class="eyebrow">Admin Review</p>
+          <h2>Pending approval queue</h2>
+          <p>Review new reservations, add remarks, and update status to Approved or Declined.</p>
+        </div>
+        <div class="dashboard-actions">
+          <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="card stat-card"><span>Total</span><strong id="totalCount">0</strong></div>
+        <div class="card stat-card"><span>Pending</span><strong id="pendingCount">0</strong></div>
+        <div class="card stat-card"><span>Approved</span><strong id="approvedCount">0</strong></div>
+        <div class="card stat-card"><span>Declined</span><strong id="declinedCount">0</strong></div>
+      </div>
+
+      <section class="card table-card">
+        <div class="table-header">
+          <h3>Reservation Records</h3>
+          <p id="adminMessage" class="form-message"></p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Guest</th>
+                <th>Stay</th>
+                <th>Room</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="recordsBody">
+              <tr>
+                <td colspan="7" class="empty-state">No data yet. Connect this page to your Apps Script web app.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>
