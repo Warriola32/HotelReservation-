@@ -4,149 +4,344 @@ function doGet(e) {
   try {
     const action = e.parameter.action;
 
-    if (action === 'getReservations') {
-      return jsonResponse({ success: true, data: getReservations() });
+    if (action === "listReservations") {
+      const data = getReservations();
+      return jsonOutput({
+        success: true,
+        reservations: data
+      });
     }
 
-    return jsonResponse({ success: false, message: 'Invalid GET action.' });
+    if (action === "checkAvailability") {
+      const result = checkAvailability(
+        e.parameter.roomType,
+        e.parameter.checkIn,
+        e.parameter.checkInTime,
+        e.parameter.checkOut,
+        e.parameter.checkOutTime
+      );
+      return jsonOutput(result);
+    }
+
+    return jsonOutput({
+      success: true,
+      message: "Hotel Reservation API is running.",
+      receivedAction: action || "none"
+    });
+
   } catch (error) {
-    return jsonResponse({ success: false, message: error.message });
+    return jsonOutput({
+      success: false,
+      message: error.toString()
+    });
   }
 }
 
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents || '{}');
-    const action = payload.action;
-    const data = payload.data || {};
 
-    if (action === 'createReservation') {
-      const reservationId = createReservation(data);
-      return jsonResponse({ success: true, message: 'Reservation saved.', reservationId: reservationId });
+    if (payload.action === 'updateReservationStatus') {
+      const result = updateReservationStatus(
+        payload.reservationId,
+        payload.newStatus,
+        payload.adminRemarks,
+        payload.reviewedBy
+      );
+      return jsonOutput(result);
     }
 
-    if (action === 'updateReservationStatus') {
-      updateReservationStatus(data);
-      return jsonResponse({ success: true, message: 'Reservation updated.' });
+    const availabilityResult = checkAvailability(
+      payload.roomType,
+      payload.checkIn,
+      payload.checkInTime,
+      payload.checkOut,
+      payload.checkOutTime
+    );
+
+    if (!availabilityResult.available) {
+      return jsonOutput({
+        success: false,
+        message: availabilityResult.message || 'Selected room is already booked for this schedule.'
+      });
     }
 
-    return jsonResponse({ success: false, message: 'Invalid POST action.' });
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+    }
+
+    const data = payload;
+    const reservationId = 'RES-' + new Date().getTime();
+
+    sheet.appendRow([
+  reservationId,
+  new Date(),
+  data.fullName || '',
+  data.email || '',
+  data.phone || '',
+  data.affiliation || '',
+  data.checkIn || '',
+  data.checkInTime || '',
+  data.checkOut || '',
+  data.checkOutTime || '',
+  data.guests || '',
+  data.roomType || '',
+  data.roomRate || '',
+  data.nights || '',
+  data.lateCheckoutFee || '',
+  data.mattressFee || '',
+  data.totalExpenses || '',
+  data.specialRequests || '',
+  'Pending Approval',
+  '',
+  '',
+  ''
+]);
+
+    sendReservationEmail(data.email, {
+  reservationId: reservationId,
+  fullName: data.fullName || '',
+  roomType: data.roomType || '',
+  checkIn: data.checkIn || '',
+  checkInTime: data.checkInTime || '',
+  checkOut: data.checkOut || '',
+  checkOutTime: data.checkOutTime || '',
+  totalExpenses: data.totalExpenses || '',
+  status: 'Pending Approval'
+});
+
+return jsonOutput({
+  success: true,
+  message: 'Reservation submitted successfully.',
+  reservationId: reservationId,
+  status: 'Pending Approval'
+});
+
   } catch (error) {
-    return jsonResponse({ success: false, message: error.message });
+    return jsonOutput({
+      success: false,
+      message: error.toString()
+    });
   }
-}
-
-function createReservation(data) {
-  validateReservation(data);
-  const sheet = getOrCreateSheet();
-  const reservationId = 'DLSL-' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd-HHmmss');
-  const now = new Date();
-
-  sheet.appendRow([
-    reservationId,
-    now,
-    data.fullName,
-    data.email,
-    data.phone,
-    data.affiliation,
-    data.checkIn,
-    data.checkOut,
-    data.roomType,
-    data.guests,
-    data.specialRequests || '',
-    'Pending',
-    '',
-    ''
-  ]);
-
-  return reservationId;
 }
 
 function getReservations() {
-  const sheet = getOrCreateSheet();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+
   const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
+  if (values.length < 2) return [];
 
   const headers = values[0];
-  return values.slice(1).map(function(row, index) {
+  const rows = values.slice(1);
+
+  return rows.map(row => {
     const obj = {};
-    headers.forEach(function(header, i) {
-      obj[header] = row[i];
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
     });
+    return obj;
+  });
+}
 
+function checkAvailability(roomType, checkIn, checkInTime, checkOut, checkOutTime) {
+  const ROOM_INVENTORY = {
+    "Standard Room": 8,
+    "Executive Room": 8,
+    "Family Suite": 8,
+    "Event Place": 1
+  };
+
+  if (!roomType || !checkIn || !checkInTime || !checkOut || !checkOutTime) {
     return {
-      rowNumber: index + 2,
-      reservationId: obj.reservationId,
-      submittedAt: obj.submittedAt,
-      fullName: obj.fullName,
-      email: obj.email,
-      phone: obj.phone,
-      affiliation: obj.affiliation,
-      checkIn: obj.checkIn,
-      checkOut: obj.checkOut,
-      roomType: obj.roomType,
-      guests: obj.guests,
-      specialRequests: obj.specialRequests,
-      status: obj.status,
-      remarks: obj.remarks,
-      reviewedBy: obj.reviewedBy
+      success: true,
+      available: false,
+      message: 'Please complete room type, check-in, and check-out schedule.'
     };
-  }).sort(function(a, b) {
-    return String(a.status).localeCompare(String(b.status));
-  });
-}
-
-function updateReservationStatus(data) {
-  if (!data.rowNumber) throw new Error('Row number is required.');
-  const sheet = getOrCreateSheet();
-  sheet.getRange(data.rowNumber, 12).setValue(data.status || 'Pending');
-  sheet.getRange(data.rowNumber, 13).setValue(data.remarks || '');
-  sheet.getRange(data.rowNumber, 14).setValue(data.reviewedBy || 'Admin');
-}
-
-function getOrCreateSheet() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = spreadsheet.getSheetByName(SHEET_NAME);
-
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(SHEET_NAME);
-    sheet.getRange(1, 1, 1, 14).setValues([[
-      'reservationId',
-      'submittedAt',
-      'fullName',
-      'email',
-      'phone',
-      'affiliation',
-      'checkIn',
-      'checkOut',
-      'roomType',
-      'guests',
-      'specialRequests',
-      'status',
-      'remarks',
-      'reviewedBy'
-    ]]);
-    sheet.setFrozenRows(1);
   }
 
-  return sheet;
-}
+  const requestedStart = parseDateTime(checkIn, checkInTime);
+  const requestedEnd = parseDateTime(checkOut, checkOutTime);
 
-function validateReservation(data) {
-  const requiredFields = ['fullName', 'email', 'phone', 'affiliation', 'checkIn', 'checkOut', 'roomType', 'guests'];
-  requiredFields.forEach(function(field) {
-    if (!data[field]) {
-      throw new Error('Missing required field: ' + field);
+  if (!requestedStart || !requestedEnd || requestedEnd <= requestedStart) {
+    return {
+      success: true,
+      available: false,
+      message: 'Invalid check-in or check-out date/time.'
+    };
+  }
+
+  const totalRooms = ROOM_INVENTORY[roomType] || 0;
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return {
+      success: true,
+      available: true,
+      availableRooms: totalRooms,
+      message: `${totalRooms} room(s) available.`
+    };
+  }
+
+  const headers = values[0];
+  const rows = values.slice(1);
+
+  const roomCol = headers.indexOf('Room Type');
+  const checkInCol = headers.indexOf('Check-In');
+  const checkInTimeCol = headers.indexOf('Check-In Time');
+  const checkOutCol = headers.indexOf('Check-Out');
+  const checkOutTimeCol = headers.indexOf('Check-Out Time');
+  const statusCol = headers.indexOf('Status');
+
+  if ([roomCol, checkInCol, checkInTimeCol, checkOutCol, checkOutTimeCol, statusCol].includes(-1)) {
+    throw new Error('Required sheet columns for availability checking are missing.');
+  }
+
+  let overlappingCount = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+
+    const existingRoomType = row[roomCol];
+    const existingStatus = String(row[statusCol] || '').trim();
+
+    if (existingRoomType !== roomType) continue;
+    if (existingStatus === 'Rejected' || existingStatus === 'Declined') continue;
+
+    const existingStart = parseSheetDateTime(row[checkInCol], row[checkInTimeCol]);
+    const existingEnd = parseSheetDateTime(row[checkOutCol], row[checkOutTimeCol]);
+
+    if (!existingStart || !existingEnd) continue;
+
+    const isOverlapping = requestedStart < existingEnd && requestedEnd > existingStart;
+
+    if (isOverlapping) {
+      overlappingCount++;
     }
-  });
-
-  if (new Date(data.checkOut) <= new Date(data.checkIn)) {
-    throw new Error('Check-out date must be later than check-in date.');
   }
+
+  const availableRooms = totalRooms - overlappingCount;
+
+  if (availableRooms <= 0) {
+    return {
+      success: true,
+      available: false,
+      availableRooms: 0,
+      message: `${roomType} is fully booked for the selected date and time.`
+    };
+  }
+
+  return {
+    success: true,
+    available: true,
+    availableRooms: availableRooms,
+    message: `${availableRooms} room(s) available for ${roomType}.`
+  };
 }
 
-function jsonResponse(payload) {
+function updateReservationStatus(reservationId, newStatus, adminRemarks, reviewedBy) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+
+  const idCol = headers.indexOf('Reservation ID') + 1;
+  const statusCol = headers.indexOf('Status') + 1;
+  const remarksCol = headers.indexOf('Admin Remarks') + 1;
+  const reviewedByCol = headers.indexOf('Reviewed By') + 1;
+  const reviewedAtCol = headers.indexOf('Reviewed At') + 1;
+
+  if (!idCol || !statusCol || !remarksCol || !reviewedByCol || !reviewedAtCol) {
+    throw new Error('One or more required columns are missing in the Reservations sheet.');
+  }
+
+  for (let row = 2; row <= values.length; row++) {
+    if (sheet.getRange(row, idCol).getValue() === reservationId) {
+      sheet.getRange(row, statusCol).setValue(newStatus || 'Pending Approval');
+      sheet.getRange(row, remarksCol).setValue(adminRemarks || '');
+      sheet.getRange(row, reviewedByCol).setValue(reviewedBy || 'Admin');
+      sheet.getRange(row, reviewedAtCol).setValue(new Date());
+
+      return {
+        success: true,
+        message: 'Reservation updated successfully.'
+      };
+    }
+  }
+
+  return {
+    success: false,
+    message: 'Reservation ID not found.'
+  };
+}
+function testEmailPermission() {
+  MailApp.sendEmail("william_augustine_arriola@dlsl", "Test Email", "MailApp is working.");
+}
+function parseDateTime(dateValue, timeValue) {
+  if (!dateValue || !timeValue) return null;
+  return new Date(dateValue + 'T' + timeValue);
+}
+
+function parseSheetDateTime(dateValue, timeValue) {
+  if (!dateValue || !timeValue) return null;
+
+  const datePart = Utilities.formatDate(new Date(dateValue), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const timePart = normalizeTimeValue(timeValue);
+
+  if (!timePart) return null;
+
+  return new Date(datePart + 'T' + timePart);
+}
+
+function normalizeTimeValue(value) {
+  if (!value) return '';
+
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value)) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'HH:mm:ss');
+  }
+
+  const text = String(value).trim();
+
+  if (/^\d{1,2}:\d{2}$/.test(text)) return text + ':00';
+  if (/^\d{1,2}:\d{2}:\d{2}$/.test(text)) return text;
+
+  return '';
+}
+
+function jsonOutput(obj) {
   return ContentService
-    .createTextOutput(JSON.stringify(payload))
+    .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendReservationEmail(email, reservation) {
+  if (!email) return;
+
+  const subject = `DLSL Guest House Reservation Received - ${reservation.reservationId}`;
+
+  const body =
+`Dear ${reservation.fullName},
+
+Thank you for your reservation request.
+
+Here are your booking details:
+
+Reservation ID: ${reservation.reservationId}
+Room Type: ${reservation.roomType}
+Check-In: ${reservation.checkIn} ${reservation.checkInTime}
+Check-Out: ${reservation.checkOut} ${reservation.checkOutTime}
+Total Expenses: ${reservation.totalExpenses}
+Status: ${reservation.status}
+
+Please note that your reservation is still subject to admin approval.
+
+Thank you,
+DLSL Guest House Reservation Portal`;
+
+  MailApp.sendEmail(email, subject, body);
 }
