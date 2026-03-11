@@ -11,69 +11,123 @@
 </head>
 <body class="admin-body">
   <header class="site-header compact">
-  <div class="container nav-wrap">
+    <div class="container nav-wrap">
+      <div class="brand-group">
+        <div class="brand-mark">
+          <a href="index.html">
+            <img src="dlsl_logo.png" alt="De La Salle Lipa Logo" class="logo-img">
+          </a>
+        </div>
 
-    <div class="brand-group">
-      <div class="brand-mark">
-        <a href="index.html">
-        <img src="dlsl_logo.png" alt="De La Salle Lipa Logo" class="logo-img">
-        </a>     
+        <div class="brand-text">
+          <p class="eyebrow">De La Salle Lipa</p>
+          <h1 class="brand-title">Reservation Admin Dashboard</h1>
+        </div>
       </div>
 
-      <div class="brand-text">
-        <p class="eyebrow">De La Salle Lipa</p>
-        <h1 class="brand-title">Reservation Admin Dashboard</h1>
-      </div>
+      <nav>
+        <a href="index.html">Booking Site</a>
+      </nav>
     </div>
+  </header>
 
-    <nav>
-      <a href="index.html">Booking Site</a>
-    </nav>
-
-  </div>
-</header>
-
-  <main class="section">
+  <main class="section admin-shell">
     <div class="container">
       <div class="dashboard-top">
         <div>
-          <p class="eyebrow">Admin Review</p>
-          <h2>Pending approval queue</h2>
-          <p>Review new reservations, add remarks, and update status to Approved or Declined.</p>
+          <p class="eyebrow admin-eyebrow">Admin Review</p>
+          <h2>Reservation management</h2>
+          <p>Review requests, filter records, inspect full details, and update reservation status from one dashboard.</p>
         </div>
+
         <div class="dashboard-actions">
-          <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+          <button class="btn btn-secondary" id="refreshBtn" type="button">Refresh</button>
         </div>
       </div>
 
-      <div class="stats-grid">
-        <div class="card stat-card"><span>Total</span><strong id="totalCount">0</strong></div>
-        <div class="card stat-card"><span>Pending</span><strong id="pendingCount">0</strong></div>
-        <div class="card stat-card"><span>Approved</span><strong id="approvedCount">0</strong></div>
-        <div class="card stat-card"><span>Declined</span><strong id="declinedCount">0</strong></div>
-      </div>
-
-      <section class="card table-card">
-        <div class="table-header">
-          <h3>Reservation Records</h3>
-          <p id="adminMessage" class="form-message"></p>
+      <section class="stats-grid admin-stats-grid">
+        <div class="card stat-card stat-card-total">
+          <span>Total Reservations</span>
+          <strong id="totalCount">0</strong>
         </div>
+        <div class="card stat-card stat-card-pending">
+          <span>Pending Approval</span>
+          <strong id="pendingCount">0</strong>
+        </div>
+        <div class="card stat-card stat-card-approved">
+          <span>Approved</span>
+          <strong id="approvedCount">0</strong>
+        </div>
+        <div class="card stat-card stat-card-declined">
+          <span>Declined</span>
+          <strong id="declinedCount">0</strong>
+        </div>
+        <div class="card stat-card stat-card-revenue">
+          <span>Estimated Revenue</span>
+          <strong id="revenueCount">₱0</strong>
+        </div>
+      </section>
+
+<section class="card admin-filter-card">
+  <div class="admin-filter-grid">
+    <label>
+      Search
+      <input type="text" id="searchInput" placeholder="Reservation ID, guest, email, or phone">
+    </label>
+
+    <label>
+      Status
+      <select id="statusFilter">
+        <option value="">All Statuses</option>
+        <option value="Pending Approval">Pending Approval</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Declined">Declined</option>
+      </select>
+    </label>
+
+    <label>
+      Room Type
+      <select id="roomFilter">
+        <option value="">All Rooms</option>
+        <option value="Standard Room">Standard Room</option>
+        <option value="Executive Room">Executive Room</option>
+        <option value="Family Suite">Family Suite</option>
+      </select>
+    </label>
+
+    <div class="admin-filter-actions">
+      <button class="btn btn-secondary" id="clearFiltersBtn" type="button">Clear</button>
+    </div>
+  </div>
+
+  <p id="adminMessage" class="form-message"></p>
+</section>
+      <section class="card table-card admin-table-card">
+        <div class="table-header admin-table-header">
+          <div>
+            <h3>Reservation Records</h3>
+            <p class="admin-subtext">Showing key booking details. Click “View” for the complete reservation record.</p>
+          </div>
+        </div>
+
         <div class="table-wrap">
-          <table>
+          <table class="admin-table-clean">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Reservation ID</th>
                 <th>Guest</th>
                 <th>Stay</th>
                 <th>Room</th>
+                <th>Guests</th>
+                <th>Total</th>
                 <th>Status</th>
-                <th>Remarks</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody id="recordsBody">
               <tr>
-                <td colspan="7" class="empty-state">No data yet. Connect this page to your Apps Script web app.</td>
+                <td colspan="8" class="empty-state">No data yet. Connect this page to your Apps Script web app.</td>
               </tr>
             </tbody>
           </table>
@@ -81,6 +135,86 @@
       </section>
     </div>
   </main>
+
+  <div id="reservationModal" class="room-modal">
+    <div class="room-modal-content admin-modal-content">
+      <button class="room-modal-close" id="closeReservationModal" type="button">&times;</button>
+
+      <div class="admin-modal-top">
+        <div>
+          <p class="eyebrow admin-eyebrow">Reservation Details</p>
+          <h3 id="modalReservationTitle">Reservation</h3>
+        </div>
+        <span id="modalStatusBadge" class="status-badge status-neutral">Pending</span>
+      </div>
+
+      <div class="admin-detail-grid">
+        <div class="admin-detail-card">
+          <h4>Guest Information</h4>
+          <div class="detail-list">
+            <div><span>Full Name: </span><strong id="detailFullName"></strong></div>
+            <div><span>Email: </span><strong id="detailEmail"></strong></div>
+            <div><span>Phone: </span><strong id="detailPhone"></strong></div>
+            <div><span>Affiliation: </span><strong id="detailAffiliation"></strong></div>
+          </div>
+        </div>
+
+        <div class="admin-detail-card">
+          <h4>Booking Schedule</h4>
+          <div class="detail-list">
+            <div><span>Check-In:: </span><strong id="detailCheckIn"></strong></div>
+            <div><span>Check-In Time: </span><strong id="detailCheckInTime"></strong></div>
+            <div><span>Check-Out: </span><strong id="detailCheckOut"></strong></div>
+            <div><span>Check-Out Time: </span><strong id="detailCheckOutTime"></strong></div>
+          </div>
+        </div>
+
+        <div class="admin-detail-card">
+          <h4>Reservation Details</h4>
+          <div class="detail-list">
+            <div><span>Reservation ID: </span><strong id="detailReservationId"></strong></div>
+            <div><span>Timestamp: </span><strong id="detailTimestamp"></strong></div>
+            <div><span>Room Type: </span><strong id="detailRoomType"></strong></div>
+            <div><span>Guests: </span><strong id="detailGuests"></strong></div>
+          </div>
+        </div>
+
+        <div class="admin-detail-card">
+          <h4>Charges</h4>
+          <div class="detail-list">
+            <div><span>Room Rate: </span><strong id="detailRoomRate"></strong></div>
+            <div><span>Nights: </span><strong id="detailNights"></strong></div>
+            <div><span>Late Checkout Fee: </span><strong id="detailLateFee"></strong></div>
+            <div><span>Total Expenses: </span><strong id="detailTotalExpenses"></strong></div>
+          </div>
+        </div>
+
+        <div class="admin-detail-card admin-detail-card-wide">
+          <h4>Special Requests: </h4>
+          <p id="detailSpecialRequests" class="detail-paragraph">—</p>
+        </div>
+
+        <div class="admin-detail-card admin-detail-card-wide">
+          <h4>Admin Review: </h4>
+          <div class="detail-list">
+            <div><span>Reviewed By: </span><strong id="detailReviewedBy"></strong></div>
+            <div><span>Reviewed At: </span><strong id="detailReviewedAt"></strong></div>
+          </div>
+
+          <label class="admin-remarks-label">
+            Admin Remarks
+            <textarea id="modalAdminRemarks" rows="4" placeholder="Add remarks before approving or declining"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <div class="room-modal-actions">
+        <button id="modalApproveBtn" class="btn-approve" type="button">Approve</button>
+        <button id="modalDeclineBtn" class="btn-decline" type="button">Decline</button>
+        <button id="closeReservationModalBtn" class="btn btn-secondary" type="button">Close</button>
+      </div>
+    </div>
+  </div>
 
   <script src="admin.js"></script>
 </body>
