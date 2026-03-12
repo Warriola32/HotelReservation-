@@ -72,7 +72,14 @@ function doPost(e) {
     }
 
     const data = payload;
-    const reservationId = 'RES-' + new Date().getTime();
+const now = new Date();
+const year = now.getFullYear();
+const month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+const reservationCount = sheet.getLastRow();
+const reservationNumber = ("00" + reservationCount).slice(-3);
+
+const reservationId = `DLSL-${year}${month}${reservationNumber}`;
 
     sheet.appendRow([
   reservationId,
@@ -267,6 +274,42 @@ function updateReservationStatus(reservationId, newStatus, adminRemarks, reviewe
       sheet.getRange(row, reviewedByCol).setValue(reviewedBy || 'Admin');
       sheet.getRange(row, reviewedAtCol).setValue(new Date());
 
+      const guestEmail = sheet.getRange(row, headers.indexOf('Email') + 1).getValue();
+      const guestName = sheet.getRange(row, headers.indexOf('Full Name') + 1).getValue();
+      const roomType = sheet.getRange(row, headers.indexOf('Room Type') + 1).getValue();
+      const checkIn = sheet.getRange(row, headers.indexOf('Check-In') + 1).getValue();
+      const checkInTime = sheet.getRange(row, headers.indexOf('Check-In Time') + 1).getValue();
+      const checkOut = sheet.getRange(row, headers.indexOf('Check-Out') + 1).getValue();
+      const checkOutTime = sheet.getRange(row, headers.indexOf('Check-Out Time') + 1).getValue();
+      const totalExpenses = sheet.getRange(row, headers.indexOf('Total Expenses') + 1).getValue();
+
+      if (newStatus === 'Approved') {
+        sendApprovalEmail(guestEmail, {
+          reservationId: reservationId,
+          fullName: guestName,
+          roomType: roomType,
+          checkIn: checkIn,
+          checkInTime: checkInTime,
+          checkOut: checkOut,
+          checkOutTime: checkOutTime,
+          totalExpenses: totalExpenses,
+          adminRemarks: adminRemarks || ''
+        });
+      }
+
+      if (newStatus === 'Rejected' || newStatus === 'Declined') {
+        sendRejectionEmail(guestEmail, {
+          reservationId: reservationId,
+          fullName: guestName,
+          roomType: roomType,
+          checkIn: checkIn,
+          checkInTime: checkInTime,
+          checkOut: checkOut,
+          checkOutTime: checkOutTime,
+          adminRemarks: adminRemarks || 'The requested reservation could not be accommodated at this time.'
+        });
+      }
+
       return {
         success: true,
         message: 'Reservation updated successfully.'
@@ -279,9 +322,12 @@ function updateReservationStatus(reservationId, newStatus, adminRemarks, reviewe
     message: 'Reservation ID not found.'
   };
 }
+
 function testEmailPermission() {
-  MailApp.sendEmail("william_augustine_arriola@dlsl", "Test Email", "MailApp is working.");
+  MailApp.sendEmail("william_augustine_arriola@dlsl.edu.ph", "Test Email", "MailApp is working.");
 }
+
+
 function parseDateTime(dateValue, timeValue) {
   if (!dateValue || !timeValue) return null;
   return new Date(dateValue + 'T' + timeValue);
@@ -322,26 +368,105 @@ function jsonOutput(obj) {
 function sendReservationEmail(email, reservation) {
   if (!email) return;
 
-  const subject = `DLSL Guest House Reservation Received - ${reservation.reservationId}`;
+  const subject = `Reservation Received | DLSL Guest House`;
 
   const body =
 `Dear ${reservation.fullName},
 
-Thank you for your reservation request.
+Greetings from De La Salle Lipa Guest House.
 
-Here are your booking details:
+This is to confirm that we have successfully received your reservation request.
 
+Reservation Details:
 Reservation ID: ${reservation.reservationId}
 Room Type: ${reservation.roomType}
 Check-In: ${reservation.checkIn} ${reservation.checkInTime}
 Check-Out: ${reservation.checkOut} ${reservation.checkOutTime}
-Total Expenses: ${reservation.totalExpenses}
-Status: ${reservation.status}
+Estimated Total: ${reservation.totalExpenses}
 
-Please note that your reservation is still subject to admin approval.
+Current Status:
+PENDING APPROVAL
 
-Thank you,
-DLSL Guest House Reservation Portal`;
+Your reservation is now under review by the Guest House administration. You will receive another email once your request has been approved or declined.
+
+Thank you for choosing De La Salle Lipa Guest House.
+
+Sincerely,
+DLSL Guest House Reservation Team`;
+
+  MailApp.sendEmail(email, subject, body);
+}
+
+function sendApprovalEmail(email, reservation) {
+  if (!email) return;
+
+  const subject = `Reservation Approved | DLSL Guest House`;
+
+  const body =
+`Dear ${reservation.fullName},
+
+Greetings from De La Salle Lipa Guest House.
+
+We are pleased to inform you that your reservation has been APPROVED.
+
+Reservation Details:
+Reservation ID: ${reservation.reservationId}
+Room Type: ${reservation.roomType}
+Check-In: ${reservation.checkIn} ${reservation.checkInTime}
+Check-Out: ${reservation.checkOut} ${reservation.checkOutTime}
+Total Amount Due: ${reservation.totalExpenses}
+
+PAYMENT PROCEDURE
+Please proceed with payment using the official payment channel below.
+
+
+Payment QR Code / Payment Link:
+https://drive.google.com/your-qr-link
+
+Payment Online Banking: 
+Bank Name: BDO
+Account Name: DLSL Guest House
+Account Number: 1234567890
+GCash Number: 09XXXXXXXXX
+
+Additional Notes:
+${reservation.adminRemarks || 'Please complete your payment and send proof of payment for verification.'}
+
+Thank you, and we look forward to welcoming you to De La Salle Lipa Guest House.
+
+Sincerely,
+DLSL Guest House Administration`;
+
+  MailApp.sendEmail(email, subject, body);
+}
+
+function sendRejectionEmail(email, reservation) {
+  if (!email) return;
+
+  const subject = `Reservation Update | DLSL Guest House`;
+
+  const body =
+`Dear ${reservation.fullName},
+
+Greetings from De La Salle Lipa Guest House.
+
+We regret to inform you that your reservation request has not been approved.
+
+Reservation Details:
+Reservation ID: ${reservation.reservationId}
+Room Type: ${reservation.roomType}
+Check-In: ${reservation.checkIn} ${reservation.checkInTime}
+Check-Out: ${reservation.checkOut} ${reservation.checkOutTime}
+
+Reason / Admin Remarks:
+${reservation.adminRemarks || 'The requested reservation could not be accommodated at this time.'}
+
+You may submit a new reservation request for another schedule if desired.
+
+Thank you for your understanding.
+
+Sincerely,
+DLSL Guest House Administration`;
 
   MailApp.sendEmail(email, subject, body);
 }
