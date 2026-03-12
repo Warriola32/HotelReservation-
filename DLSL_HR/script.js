@@ -98,7 +98,7 @@ const ROOM_DETAILS = {
   },
   "Event Place": {
     image: "event-place.webp",
-    price: "₱8,000 / day",
+    price: "₱15,000 / day",
     description: "Spacious venue ideal for meetings, celebrations, seminars, and special gatherings.",
     features: [
       "Large open space",
