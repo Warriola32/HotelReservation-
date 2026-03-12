@@ -1,5 +1,4 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-DIdEEtt29ga7aSjrx4E5Ay2S2xzbrMmf7hsBPi7sPO9XEk7BdM4nd4GnmBNa-UUmxw/exec";
-
 const form = document.getElementById("reservationForm");
 const formMessage = document.getElementById("formMessage");
 
@@ -98,7 +97,7 @@ const ROOM_DETAILS = {
     ]
   },
   "Event Place": {
-    image: "event.png",
+    image: "event-place.webp",
     price: "₱8,000 / day",
     description: "Spacious venue ideal for meetings, celebrations, seminars, and special gatherings.",
     features: [
