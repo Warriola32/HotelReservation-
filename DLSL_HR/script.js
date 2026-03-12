@@ -33,7 +33,7 @@ const ROOM_RATES = {
   "Standard Room": 2500,
   "Executive Room": 4000,
   "Family Suite": 6000,
-  "Event Place": 8000
+  "Event Place": 15000
 };
 
 const ROOM_RULES = {
