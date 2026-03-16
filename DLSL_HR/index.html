@@ -3,6 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Security Headers (Meta Version) -->
+
+<meta http-equiv="Content-Security-Policy" 
+content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data:; script-src 'self' https: 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'unsafe-inline';">
+
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<meta http-equiv="Permissions-Policy" 
+content="camera=(), microphone=(), geolocation=(), payment=()">
   <title>DLSL Guest House Reservation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
